@@ -6,12 +6,10 @@
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
     
-    /* Brand Colors */
     --color-vg: #ffffff;
     --color-vr: #ef4444;
     --color-vl: #3b82f6;
     --color-vc: #10b981;
-    --color-i:  #f59e0b;
 }
 
 * {
@@ -67,7 +65,6 @@ header p {
     }
 }
 
-/* Glassmorphism */
 .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(12px);
@@ -87,7 +84,6 @@ header p {
     padding-bottom: 0.5rem;
 }
 
-/* Controls */
 .controls {
     display: flex;
     flex-direction: column;
@@ -122,7 +118,6 @@ header p {
     border: 1px solid var(--glass-border);
 }
 
-/* Custom Range Input */
 input[type=range] {
     -webkit-appearance: none;
     width: 100%;
@@ -141,6 +136,12 @@ input[type=range]::-webkit-slider-thumb {
     transition: transform 0.1s;
 }
 
+input[type=range]:disabled::-webkit-slider-thumb {
+    background: #475569;
+    box-shadow: none;
+    cursor: not-allowed;
+}
+
 input[type=range]::-webkit-slider-thumb:hover {
     transform: scale(1.2);
 }
@@ -153,7 +154,47 @@ input[type=range]::-webkit-slider-runnable-track {
     border-radius: 2px;
 }
 
-/* Circuit Info */
+/* Toggle Switch Styles */
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
+
+.slider-toggle {
+    width: 32px;
+    height: 18px;
+    background: #475569;
+    border-radius: 20px;
+    position: relative;
+    transition: background 0.3s;
+}
+
+.slider-toggle::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+
+.toggle-label input:checked + .slider-toggle {
+    background: #3b82f6;
+}
+
+.toggle-label input:checked + .slider-toggle::after {
+    transform: translateX(14px);
+}
+
 .circuit-info {
     margin-top: 1rem;
     background: rgba(0,0,0,0.2);
@@ -179,7 +220,6 @@ input[type=range]::-webkit-slider-runnable-track {
     color: var(--text-muted);
 }
 
-/* Visualizations */
 .visualizations {
     display: flex;
     flex-direction: column;
@@ -225,7 +265,21 @@ canvas#phasorCanvas {
     align-items: center;
     gap: 0.5rem;
     font-size: 0.85rem;
-    color: var(--text-muted);
+    color: var(--text-main);
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    background: rgba(255,255,255,0.05);
+}
+
+.leg-item:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.leg-item.hidden {
+    opacity: 0.4;
+    text-decoration: line-through;
 }
 
 .dot {
