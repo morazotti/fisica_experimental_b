@@ -107,15 +107,53 @@ header p {
     color: var(--text-muted);
 }
 
-.value-display {
-    font-family: monospace;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-main);
+.input-group {
+    display: flex;
+    align-items: center;
     background: rgba(0,0,0,0.3);
-    padding: 0.2rem 0.5rem;
     border-radius: 4px;
+    overflow: hidden;
     border: 1px solid var(--glass-border);
+}
+
+.input-group input {
+    background: transparent;
+    border: none;
+    color: var(--text-main);
+    width: 65px;
+    padding: 0.2rem 0.5rem;
+    font-family: monospace;
+    font-size: 0.95rem;
+    text-align: right;
+    outline: none;
+}
+.input-group input::-webkit-outer-spin-button,
+.input-group input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.input-group input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.unit-btn {
+    background: transparent;
+    border: none;
+    border-left: 1px solid var(--glass-border);
+    color: var(--text-muted);
+    padding: 0.2rem 0.4rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+}
+
+.unit-btn:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.unit-btn.active {
+    background: #3b82f6;
+    color: #fff;
 }
 
 input[type=range] {

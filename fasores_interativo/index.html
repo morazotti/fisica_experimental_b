@@ -14,7 +14,7 @@
     <div class="app-container">
         <header>
             <h1>Fasores: Circuito RLC em Série</h1>
-            <p>Interaja com os parâmetros do circuito. Clique nos itens da legenda para mostrar/ocultar as ondas.</p>
+            <p>Interaja com os parâmetros digitando, ajustando os sliders ou escolhendo as escalas. Clique na legenda para ocultar ondas.</p>
         </header>
         
         <main class="grid-container">
@@ -27,28 +27,41 @@
                     </div>
                     <div class="radio-group" style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
                         <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-size: 0.9rem;">
-                            <input type="radio" name="sourceType" value="sine" checked>
-                            Senoidal
+                            <input type="radio" name="sourceType" value="sine" checked> Senoidal
                         </label>
                         <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-size: 0.9rem;">
-                            <input type="radio" name="sourceType" value="square">
-                            Quadrada
+                            <input type="radio" name="sourceType" value="square"> Quadrada
                         </label>
+                    </div>
+                    <div id="duty-cycle-container" style="display: none; margin-top: 1rem;">
+                        <div class="control-header">
+                            <label for="dutyCycle">Duty Cycle (Tempo Ligado)</label>
+                            <span id="val-duty" class="value-display" style="background:transparent; border:none; padding:0;">50%</span>
+                        </div>
+                        <input type="range" id="dutyCycle" min="1" max="99" step="1" value="50">
                     </div>
                 </div>
 
                 <div class="control-group">
                     <div class="control-header">
-                        <label for="voltage">Tensão V₀ (V)</label>
-                        <span id="val-voltage" class="value-display">10 V</span>
+                        <label for="voltage">Tensão V₀</label>
+                        <div class="input-group">
+                            <input type="number" id="num-voltage" value="10" min="0" step="0.1">
+                            <button class="unit-btn active" data-target="voltage" data-val="1">V</button>
+                        </div>
                     </div>
-                    <input type="range" id="voltage" min="0" max="10" step="0.1" value="10">
+                    <input type="range" id="voltage" min="0" max="100" step="0.1" value="20">
                 </div>
 
                 <div class="control-group">
                     <div class="control-header">
                         <label for="frequency">Frequência f</label>
-                        <span id="val-frequency" class="value-display">1 kHz</span>
+                        <div class="input-group">
+                            <input type="number" id="num-frequency" value="1" min="0" step="0.1">
+                            <button class="unit-btn" data-target="frequency" data-val="1">Hz</button>
+                            <button class="unit-btn active" data-target="frequency" data-val="1e3">kHz</button>
+                            <button class="unit-btn" data-target="frequency" data-val="1e6">MHz</button>
+                        </div>
                     </div>
                     <input type="range" id="frequency" min="0" max="100" step="0.1" value="50">
                 </div>
@@ -58,9 +71,14 @@
                         <label class="toggle-label">
                             <input type="checkbox" id="toggle-r" checked>
                             <span class="slider-toggle"></span>
-                            Resistor R
+                            Resistor
                         </label>
-                        <span id="val-resistance" class="value-display">1.0 kΩ</span>
+                        <div class="input-group">
+                            <input type="number" id="num-resistance" value="1" min="0" step="0.1">
+                            <button class="unit-btn" data-target="resistance" data-val="1">Ω</button>
+                            <button class="unit-btn active" data-target="resistance" data-val="1e3">kΩ</button>
+                            <button class="unit-btn" data-target="resistance" data-val="1e6">MΩ</button>
+                        </div>
                     </div>
                     <input type="range" id="resistance" min="0" max="100" step="0.1" value="50">
                 </div>
@@ -70,9 +88,13 @@
                         <label class="toggle-label">
                             <input type="checkbox" id="toggle-l" checked>
                             <span class="slider-toggle"></span>
-                            Indutor L
+                            Indutor
                         </label>
-                        <span id="val-inductance" class="value-display">1.0 H</span>
+                        <div class="input-group">
+                            <input type="number" id="num-inductance" value="100" min="0" step="0.1">
+                            <button class="unit-btn active" data-target="inductance" data-val="1e-3">mH</button>
+                            <button class="unit-btn" data-target="inductance" data-val="1">H</button>
+                        </div>
                     </div>
                     <input type="range" id="inductance" min="0" max="100" step="0.1" value="50">
                 </div>
@@ -82,9 +104,13 @@
                         <label class="toggle-label">
                             <input type="checkbox" id="toggle-c" checked>
                             <span class="slider-toggle"></span>
-                            Capacitor C
+                            Capacitor
                         </label>
-                        <span id="val-capacitance" class="value-display">1.0 µF</span>
+                        <div class="input-group">
+                            <input type="number" id="num-capacitance" value="1" min="0" step="0.1">
+                            <button class="unit-btn" data-target="capacitance" data-val="1e-9">nF</button>
+                            <button class="unit-btn active" data-target="capacitance" data-val="1e-6">µF</button>
+                        </div>
                     </div>
                     <input type="range" id="capacitance" min="0" max="100" step="0.1" value="50">
                 </div>
@@ -96,6 +122,9 @@
                     <div class="info-row"><span>Z_C:</span> <span id="out-zc">0.0 Ω</span></div>
                     <div class="info-row"><span>|Z| total:</span> <span id="out-z">0.0 Ω</span></div>
                     <div class="info-row"><span>Corrente I₀:</span> <span id="out-i">0.0 A</span></div>
+                    <div class="info-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                        <span>f Corte/Ress.:</span> <span id="out-fc">-</span>
+                    </div>
                 </div>
             </aside>
 
