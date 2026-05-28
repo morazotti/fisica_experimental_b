@@ -13,6 +13,8 @@ const toggles = {
     c: document.getElementById('toggle-c')
 };
 
+const radioSource = document.querySelectorAll('input[name="sourceType"]');
+
 const displays = {
     voltage: document.getElementById('val-voltage'),
     frequency: document.getElementById('val-frequency'),
@@ -30,6 +32,7 @@ const outputs = {
 };
 
 const legendItems = document.querySelectorAll('.leg-item');
+const phasorOverlay = document.getElementById('phasor-overlay');
 
 // Canvas e Contexto
 const canvas = document.getElementById('phasorCanvas');
@@ -51,7 +54,8 @@ let state = {
     C: 1e-6,
     activeR: true,
     activeL: true,
-    activeC: true
+    activeC: true,
+    sourceType: 'sine'
 };
 
 // Cores
@@ -95,15 +99,16 @@ function formatTime(t) {
 
 // Inicialização
 function init() {
-    // Escutar sliders
     for (let key in inputs) {
         inputs[key].addEventListener('input', updateAll);
     }
-    // Escutar toggles
     for (let key in toggles) {
         toggles[key].addEventListener('change', updateAll);
     }
-    // Escutar Legenda
+    radioSource.forEach(radio => {
+        radio.addEventListener('change', updateAll);
+    });
+    
     legendItems.forEach(item => {
         item.addEventListener('click', () => {
             const index = parseInt(item.getAttribute('data-index'));
@@ -127,7 +132,7 @@ function init() {
 let physics = {};
 
 function updateAll() {
-    // 1. Ler Toggles
+    // 1. Ler Inputs
     state.activeR = toggles.r.checked;
     state.activeL = toggles.l.checked;
     state.activeC = toggles.c.checked;
@@ -135,31 +140,33 @@ function updateAll() {
     inputs.resistance.disabled = !state.activeR;
     inputs.inductance.disabled = !state.activeL;
     inputs.capacitance.disabled = !state.activeC;
+    
+    radioSource.forEach(radio => {
+        if (radio.checked) state.sourceType = radio.value;
+    });
 
-    // 2. Ler e Mapear Sliders
-    state.V0 = parseFloat(inputs.voltage.value); // Linear 0-10
-    const val_f = parseFloat(inputs.frequency.value); // 0-100
-    const val_r = parseFloat(inputs.resistance.value); // 0-100
-    const val_l = parseFloat(inputs.inductance.value); // 0-100
-    const val_c = parseFloat(inputs.capacitance.value); // 0-100
+    state.V0 = parseFloat(inputs.voltage.value); 
+    const val_f = parseFloat(inputs.frequency.value); 
+    const val_r = parseFloat(inputs.resistance.value); 
+    const val_l = parseFloat(inputs.inductance.value); 
+    const val_c = parseFloat(inputs.capacitance.value); 
 
-    state.f = logScale(val_f, 1, 100000); // 1 Hz a 100 kHz
+    state.f = logScale(val_f, 1, 100000); 
     state.omega = 2 * Math.PI * state.f;
-    state.R = logScale(val_r, 150, 5000); // 150 a 5k
-    state.L = logScale(val_l, 0.1, 20); // 100mH a 20H
-    state.C = logScale(val_c, 4.7e-9, 4.7e-6); // 4.7nF a 4.7µF
+    state.R = logScale(val_r, 150, 5000); 
+    state.L = logScale(val_l, 0.1, 20); 
+    state.C = logScale(val_c, 4.7e-9, 4.7e-6); 
 
-    // 3. Atualizar Displays
+    // 2. Atualizar Displays
     displays.voltage.innerText = `${state.V0.toFixed(1)} V`;
     displays.frequency.innerText = formatFreq(state.f);
     displays.resistance.innerText = state.activeR ? formatRes(state.R) : "Desligado";
     displays.inductance.innerText = state.activeL ? formatInd(state.L) : "Desligado";
     displays.capacitance.innerText = state.activeC ? formatCap(state.C) : "Desligado";
 
-    // 4. Física do Circuito
+    // 3. Física de Regime Permanente (para Fasores e UI)
     const ZR = state.activeR ? state.R : 0;
     const ZL = state.activeL ? state.omega * state.L : 0;
-    // Se capacitância estiver desligada (fio), a impedância é 0.
     const ZC = state.activeC ? 1 / (state.omega * state.C) : 0; 
     
     const Z_real = ZR;
@@ -167,31 +174,30 @@ function updateAll() {
     const Z_mag = Math.sqrt(Z_real*Z_real + Z_imag*Z_imag);
     const Z_phase = Math.atan2(Z_imag, Z_real);
 
-    // Como VR é a referência, a corrente I tem fase 0.
     const I_mag = Z_mag === 0 ? 0 : state.V0 / Z_mag;
     
     physics = {
-        // VR está em fase com I (fase = 0)
         vr: { mag: I_mag * ZR, phase: 0 },
-        // VL adianta a corrente em 90 graus
         vl: { mag: I_mag * ZL, phase: Math.PI/2 },
-        // VC atrasa a corrente em 90 graus
         vc: { mag: I_mag * ZC, phase: -Math.PI/2 },
-        // Vg (fonte) = I * Z. Portanto a fase de Vg é Z_phase.
         vg: { mag: state.V0, phase: Z_phase }
     };
 
-    // 5. Textos de Saída
     outputs.zr.innerText = `${formatRes(ZR)}`;
     outputs.zl.innerText = `${formatRes(ZL)}`;
     outputs.zc.innerText = `-${formatRes(ZC)}`;
     outputs.z.innerText = `${formatRes(Z_mag)}`;
-    // Se Z_mag = 0, a corrente teoricamente é infinita. Tratar.
     if (Z_mag === 0) {
         outputs.i.innerText = `Curto!`;
     } else {
         const i_ma = I_mag * 1000;
         outputs.i.innerText = i_ma >= 1000 ? `${I_mag.toFixed(2)} A` : `${i_ma.toFixed(1)} mA`;
+    }
+
+    if (state.sourceType === 'square') {
+        phasorOverlay.style.display = 'flex';
+    } else {
+        phasorOverlay.style.display = 'none';
     }
 
     updateChart();
@@ -219,18 +225,13 @@ function drawArrow(ctx, fromX, fromY, toX, toY, color) {
     ctx.fill();
 }
 
-let startTime = Date.now();
+// Loop de animação (Apenas para desenhar os fasores)
 function animationLoop() {
-    const now = Date.now();
-    const t_anim = (now - startTime) / 1000; 
-    const currentPhaseOffset = t_anim * 1.0; 
-
     ctx.clearRect(0, 0, size, size);
     
     const cx = size / 2;
     const cy = size / 2;
 
-    // Eixos
     ctx.beginPath();
     ctx.moveTo(cx, 0);
     ctx.lineTo(cx, size);
@@ -240,7 +241,6 @@ function animationLoop() {
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Círculo de V0
     const maxVoltage = 10; 
     const pixelPerV = (size / 2 - 20) / maxVoltage;
 
@@ -250,14 +250,15 @@ function animationLoop() {
     ctx.stroke();
 
     const drawPhasor = (mag, phase, color, scale) => {
-        if (mag < 0.01) return; // Não desenhar setas de tamanho 0
-        const displayAngle = -(phase + currentPhaseOffset);
+        if (mag < 0.01) return;
+        // Removido a rotação (currentPhaseOffset = 0)
+        const displayAngle = -phase;
         const px = cx + mag * scale * Math.cos(displayAngle);
         const py = cy + mag * scale * Math.sin(displayAngle);
         drawArrow(ctx, cx, cy, px, py, color);
     };
 
-    if (physics.vg) {
+    if (physics.vg && state.sourceType === 'sine') {
         if (state.activeR) drawPhasor(physics.vr.mag, physics.vr.phase, colors.vr, pixelPerV);
         if (state.activeL) drawPhasor(physics.vl.mag, physics.vl.phase, colors.vl, pixelPerV);
         if (state.activeC) drawPhasor(physics.vc.mag, physics.vc.phase, colors.vc, pixelPerV);
@@ -265,6 +266,68 @@ function animationLoop() {
     }
 
     requestAnimationFrame(animationLoop);
+}
+
+// Função para calcular a resposta transiente a um degrau de tensão
+function getStepResponse(t, V_step, i0, Vc0) {
+    const R = state.activeR ? state.R : 0.001; // Evita divisão por zero
+    const L = state.L;
+    const C = state.C;
+    
+    let i = 0, Vc = 0, Vr = 0, Vl = 0;
+
+    if (!state.activeL && !state.activeC) { // Só Resistor
+        i = V_step / R;
+        Vr = V_step;
+        Vc = 0;
+        Vl = 0;
+    } 
+    else if (!state.activeL && state.activeC) { // RC
+        const tau = R * C;
+        Vc = V_step + (Vc0 - V_step) * Math.exp(-t / tau);
+        i = ((V_step - Vc0) / R) * Math.exp(-t / tau);
+        Vr = i * R;
+        Vl = 0;
+    } 
+    else if (state.activeL && !state.activeC) { // RL
+        const tau = L / R;
+        i = (V_step / R) + (i0 - (V_step / R)) * Math.exp(-t / tau);
+        Vr = i * R;
+        Vc = 0;
+        Vl = V_step - Vr;
+    } 
+    else { // RLC
+        const alpha = R / (2 * L);
+        const w0 = 1 / Math.sqrt(L * C);
+        const y0 = Vc0 - V_step;
+        const dy0 = i0 / C;
+
+        if (alpha > w0) { // Superamortecido
+            const s1 = -alpha + Math.sqrt(alpha*alpha - w0*w0);
+            const s2 = -alpha - Math.sqrt(alpha*alpha - w0*w0);
+            const A1 = (dy0 - s2 * y0) / (s1 - s2);
+            const A2 = y0 - A1;
+            Vc = V_step + A1 * Math.exp(s1 * t) + A2 * Math.exp(s2 * t);
+            i = C * (A1 * s1 * Math.exp(s1 * t) + A2 * s2 * Math.exp(s2 * t));
+        } 
+        else if (Math.abs(alpha - w0) < 1e-6) { // Criticamente amortecido
+            const A1 = y0;
+            const A2 = dy0 + alpha * y0;
+            Vc = V_step + (A1 + A2 * t) * Math.exp(-alpha * t);
+            i = C * (A2 * Math.exp(-alpha * t) - alpha * (A1 + A2 * t) * Math.exp(-alpha * t));
+        } 
+        else { // Subamortecido
+            const wd = Math.sqrt(w0*w0 - alpha*alpha);
+            const B1 = y0;
+            const B2 = (dy0 + alpha * B1) / wd;
+            Vc = V_step + Math.exp(-alpha * t) * (B1 * Math.cos(wd * t) + B2 * Math.sin(wd * t));
+            i = C * Math.exp(-alpha * t) * ((-alpha * B1 + wd * B2) * Math.cos(wd * t) - (alpha * B2 + wd * B1) * Math.sin(wd * t));
+        }
+        Vr = i * R;
+        Vl = V_step - Vr - Vc;
+    }
+    
+    return { i, Vc, Vr, Vl };
 }
 
 function initChart() {
@@ -320,7 +383,6 @@ function initChart() {
 function updateChart() {
     if (!waveChart) return;
 
-    // Gerar pontos para 3 períodos
     const T = 1 / state.f;
     const numPoints = 200;
     const maxTime = 3 * T;
@@ -329,18 +391,56 @@ function updateChart() {
     const labels = [];
     const dVg = [], dVr = [], dVl = [], dVc = [];
 
-    for (let i = 0; i <= numPoints; i++) {
-        const t = i * dt;
-        labels.push(formatTime(t));
+    if (state.sourceType === 'sine') {
+        for (let j = 0; j <= numPoints; j++) {
+            const t = j * dt;
+            labels.push(formatTime(t));
+            const omega_t = state.omega * t;
+            dVg.push(physics.vg.mag * Math.cos(omega_t + physics.vg.phase));
+            dVr.push(state.activeR ? physics.vr.mag * Math.cos(omega_t + physics.vr.phase) : 0);
+            dVl.push(state.activeL ? physics.vl.mag * Math.cos(omega_t + physics.vl.phase) : 0);
+            dVc.push(state.activeC ? physics.vc.mag * Math.cos(omega_t + physics.vc.phase) : 0);
+        }
+        waveChart.data.datasets.forEach(ds => ds.stepped = false);
+    } else {
+        // Lógica de Onda Quadrada
+        const T_half = T / 2;
+        let boundaries = [];
+        let current_i0 = 0;
+        let current_Vc0 = 0;
+        let v_current = state.V0; // Inicia ligado
 
-        const omega_t = state.omega * t;
-        
-        dVg.push(physics.vg.mag * Math.cos(omega_t + physics.vg.phase));
-        
-        // Se desligado, a tensão é 0
-        dVr.push(state.activeR ? physics.vr.mag * Math.cos(omega_t + physics.vr.phase) : 0);
-        dVl.push(state.activeL ? physics.vl.mag * Math.cos(omega_t + physics.vl.phase) : 0);
-        dVc.push(state.activeC ? physics.vc.mag * Math.cos(omega_t + physics.vc.phase) : 0);
+        // Pre-calcular os limites de cada meio-ciclo para condições iniciais
+        for(let k = 0; k <= 6; k++) {
+            boundaries.push({
+                t_start: k * T_half,
+                i0: current_i0,
+                Vc0: current_Vc0,
+                V_step: v_current
+            });
+            let res = getStepResponse(T_half, v_current, current_i0, current_Vc0);
+            current_i0 = res.i;
+            current_Vc0 = res.Vc;
+            v_current = v_current === state.V0 ? 0 : state.V0;
+        }
+
+        for (let j = 0; j <= numPoints; j++) {
+            const t = j * dt;
+            labels.push(formatTime(t));
+
+            let k = Math.floor(t / T_half);
+            if (k > 6) k = 6;
+            
+            let local_t = t - boundaries[k].t_start;
+            let res = getStepResponse(local_t, boundaries[k].V_step, boundaries[k].i0, boundaries[k].Vc0);
+            
+            dVg.push(boundaries[k].V_step);
+            dVr.push(state.activeR ? res.Vr : 0);
+            dVl.push(state.activeL ? res.Vl : 0);
+            dVc.push(state.activeC ? res.Vc : 0);
+        }
+        // Desligar interpolação suave na fonte para a onda quadrada ficar reta
+        waveChart.data.datasets[0].stepped = true;
     }
 
     waveChart.data.labels = labels;

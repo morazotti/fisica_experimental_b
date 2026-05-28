@@ -23,6 +23,22 @@
                 
                 <div class="control-group">
                     <div class="control-header">
+                        <label>Tipo de Fonte</label>
+                    </div>
+                    <div class="radio-group" style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                        <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-size: 0.9rem;">
+                            <input type="radio" name="sourceType" value="sine" checked>
+                            Senoidal
+                        </label>
+                        <label class="radio-label" style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; color: var(--text-main); font-size: 0.9rem;">
+                            <input type="radio" name="sourceType" value="square">
+                            Quadrada
+                        </label>
+                    </div>
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
                         <label for="voltage">Tensão V₀ (V)</label>
                         <span id="val-voltage" class="value-display">10 V</span>
                     </div>
@@ -86,8 +102,11 @@
             <section class="visualizations">
                 <div class="glass-panel phasor-container">
                     <h2>Diagrama de Fasores</h2>
-                    <div class="canvas-wrapper">
+                    <div class="canvas-wrapper" id="phasor-wrapper">
                         <canvas id="phasorCanvas" width="400" height="400"></canvas>
+                        <div class="overlay-message" id="phasor-overlay" style="display: none;">
+                            Fasores aplicam-se apenas ao regime permanente senoidal.
+                        </div>
                     </div>
                     <div class="legend" id="custom-legend">
                         <div class="leg-item" data-index="0"><span class="dot" style="background: #ffffff"></span> Vg (Fonte)</div>
