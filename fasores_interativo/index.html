@@ -45,7 +45,7 @@
 
                 <div class="control-group">
                     <div class="control-header">
-                        <label for="voltage">Tensão V₀</label>
+                        <label for="voltage">Tensão V<sub>0</sub></label>
                         <div class="input-group">
                             <input type="number" id="num-voltage" value="10" min="0" step="0.1">
                             <button class="unit-btn active" data-target="voltage" data-val="1">V</button>
@@ -118,31 +118,43 @@
                 
                 <div class="circuit-info">
                     <h3>Valores Calculados</h3>
-                    <div class="info-row"><span>Z_R:</span> <span id="out-zr">0.0 Ω</span></div>
-                    <div class="info-row"><span>Z_L:</span> <span id="out-zl">0.0 Ω</span></div>
-                    <div class="info-row"><span>Z_C:</span> <span id="out-zc">0.0 Ω</span></div>
+                    <div class="info-row"><span>Z<sub>R</sub>:</span> <span id="out-zr">0.0 Ω</span></div>
+                    <div class="info-row"><span>Z<sub>L</sub>:</span> <span id="out-zl">0.0 Ω</span></div>
+                    <div class="info-row"><span>Z<sub>C</sub>:</span> <span id="out-zc">0.0 Ω</span></div>
                     <div class="info-row"><span>|Z| total:</span> <span id="out-z">0.0 Ω</span></div>
-                    <div class="info-row"><span>Corrente I₀:</span> <span id="out-i">0.0 A</span></div>
-                    <div class="info-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div class="info-row"><span>Corrente I<sub>0</sub>:</span> <span id="out-i">0.0 A</span></div>
+                    <div class="info-row" style="margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--border-color);">
                         <span>f Corte/Ress.:</span> <span id="out-fc">-</span>
                     </div>
                 </div>
             </aside>
 
             <section class="visualizations">
-                <div class="glass-panel phasor-container">
-                    <h2>Diagrama de Fasores</h2>
-                    <div class="canvas-wrapper" id="phasor-wrapper">
-                        <canvas id="phasorCanvas" width="400" height="400"></canvas>
-                        <div class="overlay-message" id="phasor-overlay" style="display: none;">
-                            Fasores aplicam-se apenas ao regime permanente senoidal.
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+                    <div class="glass-panel phasor-container">
+                        <h2>Diagrama de Fasores</h2>
+                        <div class="canvas-wrapper" id="phasor-wrapper">
+                            <canvas id="phasorCanvas" width="400" height="400"></canvas>
+                            <div class="overlay-message" id="phasor-overlay" style="display: none;">
+                                Fasores aplicam-se apenas ao regime permanente senoidal.
+                            </div>
+                        </div>
+                        <div class="legend" id="custom-legend">
+                            <div class="leg-item" data-index="0"><span class="dot" style="background: var(--color-vg)"></span> V<sub>g</sub> (Fonte)</div>
+                            <div class="leg-item" data-index="1"><span class="dot" style="background: var(--color-vr)"></span> V<sub>R</sub> (Resistor)</div>
+                            <div class="leg-item" data-index="2"><span class="dot" style="background: var(--color-vl)"></span> V<sub>L</sub> (Indutor)</div>
+                            <div class="leg-item" data-index="3"><span class="dot" style="background: var(--color-vc)"></span> V<sub>C</sub> (Capacitor)</div>
                         </div>
                     </div>
-                    <div class="legend" id="custom-legend">
-                        <div class="leg-item" data-index="0"><span class="dot" style="background: var(--color-vg)"></span> Vg (Fonte)</div>
-                        <div class="leg-item" data-index="1"><span class="dot" style="background: var(--color-vr)"></span> VR (Resistor)</div>
-                        <div class="leg-item" data-index="2"><span class="dot" style="background: var(--color-vl)"></span> VL (Indutor)</div>
-                        <div class="leg-item" data-index="3"><span class="dot" style="background: var(--color-vc)"></span> VC (Capacitor)</div>
+
+                    <div class="glass-panel power-container" style="display: flex; flex-direction: column;">
+                        <h2>Triângulo de Potências (RMS)</h2>
+                        <div class="chart-wrapper" style="flex: 1; min-height: 300px; padding: 0;">
+                            <canvas id="powerChart"></canvas>
+                            <div class="overlay-message" id="power-overlay" style="display: none;">
+                                Exclusivo para regime senoidal.
+                            </div>
+                        </div>
                     </div>
                 </div>
 

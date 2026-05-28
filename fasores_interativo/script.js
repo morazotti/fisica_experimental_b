@@ -31,6 +31,7 @@ const outputs = {
 
 const legendItems = document.querySelectorAll('.leg-item');
 const phasorOverlay = document.getElementById('phasor-overlay');
+const powerOverlay = document.getElementById('power-overlay');
 const themeToggle = document.getElementById('theme-toggle');
 
 const canvas = document.getElementById('phasorCanvas');
@@ -66,8 +67,9 @@ let state = {
     duty: 50
 };
 
-const colors = { vg: '#0f172a', vr: '#dc2626', vl: '#2563eb', vc: '#16a34a' };
+const colors = { vg: '#0f172a', vr: '#dc2626', vl: '#2563eb', vc: '#16a34a', s: '#8b5cf6', p: '#f59e0b', q: '#06b6d4' };
 let waveChart = null;
+let powerChart = null;
 let visibleWaves = [true, true, true, true];
 
 // Funções Matemáticas para Escalas
@@ -140,6 +142,12 @@ function updateThemeColors() {
         waveChart.options.scales.y.grid.color = gridColor;
         waveChart.data.datasets[0].borderColor = colors.vg;
         waveChart.update();
+    }
+    if (powerChart) {
+        const gridColor = getCSSColor('--color-grid') || '#e2e8f0';
+        powerChart.options.scales.x.grid.color = gridColor;
+        powerChart.options.scales.y.grid.color = gridColor;
+        powerChart.update();
     }
 }
 
@@ -355,13 +363,16 @@ function updatePhysics() {
 
     if (state.sourceType === 'square') {
         phasorOverlay.style.display = 'flex';
+        powerOverlay.style.display = 'flex';
         dutyContainer.style.display = 'block';
     } else {
         phasorOverlay.style.display = 'none';
+        powerOverlay.style.display = 'none';
         dutyContainer.style.display = 'none';
     }
 
     updateChart();
+    updatePowerChart();
 }
 
 function drawArrow(ctx, fromX, fromY, toX, toY, color) {
@@ -514,6 +525,54 @@ function initChart() {
             }
         }
     });
+
+    const ctxPower = document.getElementById('powerChart').getContext('2d');
+    powerChart = new Chart(ctxPower, {
+        type: 'bar',
+        data: {
+            labels: ['S (VA)', 'P (W)', 'Q (VAr)'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: [colors.s, colors.p, colors.q],
+                borderWidth: 0,
+                borderRadius: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 200 },
+            scales: {
+                x: { grid: { color: '#e2e8f0' } },
+                y: { beginAtZero: true, grid: { color: '#e2e8f0' } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function(context) { return `${context.parsed.y.toFixed(3)}`; } } }
+            }
+        }
+    });
+}
+
+function updatePowerChart() {
+    if (!powerChart) return;
+    
+    // Potências em Regime Permanente Senoidal RMS
+    const Irms = (state.V0 / Math.sqrt(2)) / (state.activeR ? state.R : 0.001); // fallback
+    const Z_real = state.activeR ? state.R : 0;
+    const Z_imag = (state.activeL ? state.omega * state.L : 0) - (state.activeC ? 1 / (state.omega * state.C) : 0);
+    const Z_mag = Math.sqrt(Z_real*Z_real + Z_imag*Z_imag);
+    
+    let I_rms = 0;
+    if (Z_mag > 0) I_rms = (state.V0 / Math.sqrt(2)) / Z_mag;
+    const V_rms = state.V0 / Math.sqrt(2);
+    
+    const S = V_rms * I_rms;
+    const P = I_rms * I_rms * Z_real;
+    const Q = I_rms * I_rms * Z_imag;
+
+    powerChart.data.datasets[0].data = [S, P, Q];
+    powerChart.update();
 }
 
 function updateChart() {
