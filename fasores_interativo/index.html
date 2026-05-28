@@ -12,7 +12,8 @@
 </head>
 <body>
     <div class="app-container">
-        <header>
+        <header style="position: relative;">
+            <button id="theme-toggle" class="theme-btn">🌙 Modo Noturno</button>
             <h1>Fasores: Circuito RLC em Série</h1>
             <p>Interaja com os parâmetros digitando, ajustando os sliders ou escolhendo as escalas. Clique na legenda para ocultar ondas.</p>
         </header>
@@ -138,10 +139,10 @@
                         </div>
                     </div>
                     <div class="legend" id="custom-legend">
-                        <div class="leg-item" data-index="0"><span class="dot" style="background: #ffffff"></span> Vg (Fonte)</div>
-                        <div class="leg-item" data-index="1"><span class="dot" style="background: #ef4444"></span> VR (Resistor)</div>
-                        <div class="leg-item" data-index="2"><span class="dot" style="background: #3b82f6"></span> VL (Indutor)</div>
-                        <div class="leg-item" data-index="3"><span class="dot" style="background: #10b981"></span> VC (Capacitor)</div>
+                        <div class="leg-item" data-index="0"><span class="dot" style="background: var(--color-vg)"></span> Vg (Fonte)</div>
+                        <div class="leg-item" data-index="1"><span class="dot" style="background: var(--color-vr)"></span> VR (Resistor)</div>
+                        <div class="leg-item" data-index="2"><span class="dot" style="background: var(--color-vl)"></span> VL (Indutor)</div>
+                        <div class="leg-item" data-index="3"><span class="dot" style="background: var(--color-vc)"></span> VC (Capacitor)</div>
                     </div>
                 </div>
 

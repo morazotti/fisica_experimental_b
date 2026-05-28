@@ -31,6 +31,7 @@ const outputs = {
 
 const legendItems = document.querySelectorAll('.leg-item');
 const phasorOverlay = document.getElementById('phasor-overlay');
+const themeToggle = document.getElementById('theme-toggle');
 
 const canvas = document.getElementById('phasorCanvas');
 const ctx = canvas.getContext('2d');
@@ -65,7 +66,7 @@ let state = {
     duty: 50
 };
 
-const colors = { vg: '#ffffff', vr: '#ef4444', vl: '#3b82f6', vc: '#10b981' };
+const colors = { vg: '#0f172a', vr: '#dc2626', vl: '#2563eb', vc: '#16a34a' };
 let waveChart = null;
 let visibleWaves = [true, true, true, true];
 
@@ -126,6 +127,22 @@ function getBestUnit(key, absVal) {
     }
 }
 
+function getCSSColor(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+}
+
+function updateThemeColors() {
+    colors.vg = getCSSColor('--color-vg') || '#000000';
+    if (waveChart) {
+        Chart.defaults.color = getCSSColor('--text-muted') || '#475569';
+        const gridColor = getCSSColor('--color-grid') || '#e2e8f0';
+        waveChart.options.scales.x.grid.color = gridColor;
+        waveChart.options.scales.y.grid.color = gridColor;
+        waveChart.data.datasets[0].borderColor = colors.vg;
+        waveChart.update();
+    }
+}
+
 // Inicialização
 function init() {
     // Eventos de Sliders (Range)
@@ -173,8 +190,21 @@ function init() {
             waveChart.update();
         });
     });
+
+    themeToggle.addEventListener('click', () => {
+        const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        if (isDark) {
+            document.documentElement.removeAttribute('data-theme');
+            themeToggle.innerText = '🌙 Modo Noturno';
+        } else {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            themeToggle.innerText = '☀️ Modo Claro';
+        }
+        updateThemeColors();
+    });
     
     initChart();
+    updateThemeColors();
     // Inicializar os sliders com base nos inputs atuais (que vieram no HTML)
     for (let key in inputs) {
         handleNumberOrUnit(key);
@@ -368,7 +398,7 @@ function animationLoop() {
     ctx.lineTo(cx, size);
     ctx.moveTo(0, cy);
     ctx.lineTo(size, cy);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+    ctx.strokeStyle = getCSSColor('--color-grid') || '#e2e8f0';
     ctx.lineWidth = 1;
     ctx.stroke();
 
@@ -377,7 +407,7 @@ function animationLoop() {
 
     ctx.beginPath();
     ctx.arc(cx, cy, state.V0 * pixelPerV, 0, 2 * Math.PI);
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    ctx.strokeStyle = getCSSColor('--color-grid') || '#e2e8f0';
     ctx.stroke();
 
     const drawPhasor = (mag, phase, color, scale) => {
@@ -455,8 +485,8 @@ function getStepResponse(t, V_step, i0, Vc0) {
 
 function initChart() {
     const ctxChart = document.getElementById('waveChart').getContext('2d');
-    Chart.defaults.color = '#94a3b8';
-    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#475569';
+    Chart.defaults.font.family = "'Inter', system-ui, sans-serif";
 
     waveChart = new Chart(ctxChart, {
         type: 'line',
@@ -475,8 +505,8 @@ function initChart() {
             animation: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                x: { title: { display: true, text: 'Tempo' }, grid: { color: 'rgba(255,255,255,0.1)' } },
-                y: { type: 'linear', display: true, title: { display: true, text: 'Tensão (V)' }, grid: { color: 'rgba(255,255,255,0.1)' } }
+                x: { title: { display: true, text: 'Tempo' }, grid: { color: '#e2e8f0' } },
+                y: { type: 'linear', display: true, title: { display: true, text: 'Tensão (V)' }, grid: { color: '#e2e8f0' } }
             },
             plugins: {
                 legend: { display: false },
